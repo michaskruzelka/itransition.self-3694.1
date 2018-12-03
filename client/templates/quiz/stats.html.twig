@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} - {{ quiz.name }}{% endblock %}
+
+{% block body %}
+    <h2>Quiz "{{ quiz.name }}"</h2>
+
+    <h3>Leading scorers:</h3>
+
+    <ul>
+
+        {% for attempt in quiz.getCompleteAttempts().slice(0, 3) %}
+        <li>
+            <strong>{{ attempt.getAuthor().getFullName() }}</strong>
+            scored {{ attempt.getScore() }} points for {{ attempt.getFormattedDuration() }}
+        </li>
+        {% else %}
+            No scorers found
+        {% endfor %}
+    </ul>
+
+    {% if myAttempt.complete() %}
+        <h3>My position: {{ quiz.attempts.indexOf(myAttempt)+1 }}</h3>
+        {{ myAttempt.getScore() }} points for {{ myAttempt.getFormattedDuration() }}
+
+    {% endif %}
+
+{% endblock %}

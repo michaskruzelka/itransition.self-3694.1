@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}List{% endblock %}
+
+{% block body %}
+    <h2>Quizzes</h2>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Participants</th>
+                <th>Status</th>
+                <th>Leading Scorer</th>
+                <th> </th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for quizRow in quizzes %}
+            <tr>
+                <td>{{ quizRow.quiz.getName() }}</td>
+                <td>{{ quizRow.attemptsCount }}</td>
+                <td>{{ quizRow.quiz.getIsActive() ? 'Active' : 'Not active' }}</td>
+                <td>{{ quizRow.leadingScorer ? quizRow.leadingScorer : 'No participants' }}</td>
+                <td>
+                    <a href="{{ path('quiz_take', {'id': quizRow.quiz.getId()}) }}">
+                        {% if quizRow.quiz.availableToStart(quizRow.myAttemptStatus) %}
+                            Start
+                        {% elseif quizRow.quiz.availableToResume(quizRow.myAttemptStatus) %}
+                            Resume
+                        {% else %}
+                            Statistics
+                        {% endif %}
+                    </a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">No quizzes found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

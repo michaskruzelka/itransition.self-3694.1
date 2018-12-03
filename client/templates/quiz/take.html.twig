@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} - {{ quiz.name }}{% endblock %}
+
+{% block body %}
+    <h2>Quiz "{{ quiz.name }}"</h2>
+
+    <div>The current score: {{ myAttempt.getScore() }} / {{ quiz.getQuestions().count() }}</div>
+
+    <div>
+        <a href="{{ path('attempt_suspend', {'id': myAttempt.getId()}) }}">Suspend</a>
+    </div>
+
+    <div>
+        <h3>Question {{ myAttempt.getCurrentQuestionNumber() }}</h3>
+
+        {{ myAttempt.getCurrentQuestion().getContent() }}
+
+        <div>
+            {{ form_start(formView) }}
+            {{ form_widget(formView) }}
+            {{ form_end(formView) }}
+        </div>
+    </div>
+
+{% endblock %}

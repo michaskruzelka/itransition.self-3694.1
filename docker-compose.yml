@@ -1,0 +1,93 @@
+version: '3.4'
+
+services:
+  php:
+    image: ${CONTAINER_REGISTRY_BASE}/php
+    build:
+      context: ./client
+      target: api_platform_php
+      cache_from:
+        - ${CONTAINER_REGISTRY_BASE}/php
+        - ${CONTAINER_REGISTRY_BASE}/nginx
+        - ${CONTAINER_REGISTRY_BASE}/varnish
+    depends_on:
+      - db
+    env_file:
+      - ./client/.env
+    volumes:
+      - ./client:/srv/api:rw,cached
+
+  client:
+    image: ${CONTAINER_REGISTRY_BASE}/nginx
+    build:
+      context: ./client
+      target: api_platform_nginx
+      cache_from:
+        - ${CONTAINER_REGISTRY_BASE}/php
+        - ${CONTAINER_REGISTRY_BASE}/nginx
+        - ${CONTAINER_REGISTRY_BASE}/varnish
+    depends_on:
+      - php
+    volumes:
+      - ./client/public:/srv/api/public:ro
+    ports:
+      - "80:3000"
+
+  cache-proxy:
+    image: ${CONTAINER_REGISTRY_BASE}/varnish
+    build:
+      context: ./client
+      target: api_platform_varnish
+      cache_from:
+        - ${CONTAINER_REGISTRY_BASE}/php
+        - ${CONTAINER_REGISTRY_BASE}/nginx
+        - ${CONTAINER_REGISTRY_BASE}/varnish
+    depends_on:
+      - client
+    volumes:
+      - ./client/docker/varnish/conf:/usr/local/etc/varnish:ro
+    tmpfs:
+      - /usr/local/var/varnish:exec
+    ports:
+      - "8081:80"
+
+  db:
+    image: postgres:9.6-alpine
+    environment:
+      - POSTGRES_DB=quizdb
+      - POSTGRES_USER=symfony
+      - POSTGRES_PASSWORD=XPY8DwBwewyGAzpD
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db-data:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+
+  admin:
+    image: ${CONTAINER_REGISTRY_BASE}/admin
+    build:
+      context: ./admin
+      cache_from:
+      - ${CONTAINER_REGISTRY_BASE}/admin
+    env_file:
+      - ./admin/.env
+    volumes:
+      - ./admin:/usr/src/admin:rw,cached
+      - /usr/src/admin/node_modules
+    ports:
+      - "81:3000"
+
+  h2-proxy:
+    # Don't use this proxy in prod
+    build:
+      context: ./h2-proxy
+    depends_on:
+      - cache-proxy
+      - admin
+      - client
+    ports:
+      - "444:444"
+      - "443:443"
+
+volumes:
+  db-data: {}
